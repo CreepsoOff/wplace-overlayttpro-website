@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  overlay-pro-website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: overlay-pro-website
+    restart: unless-stopped
+    networks:
+      - aiostreams_default
+    labels:
+      - "traefik.enable=true"
+      # Router HTTPS
+      - "traefik.http.routers.overlay-pro.rule=Host(`install.creepso.com`)"
+      - "traefik.http.routers.overlay-pro.entrypoints=websecure"
+      - "traefik.http.routers.overlay-pro.tls=true"
+      - "traefik.http.routers.overlay-pro.tls.certresolver=letsencrypt"
+      - "traefik.http.services.overlay-pro.loadbalancer.server.port=3000"
+      # Router HTTP → HTTPS redirect
+      - "traefik.http.routers.overlay-pro-http.rule=Host(`install.creepso.com`)"
+      - "traefik.http.routers.overlay-pro-http.entrypoints=web"
+      - "traefik.http.routers.overlay-pro-http.middlewares=redirect-to-https@docker"
+      # Middleware redirect
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+networks:
+  aiostreams_default:
+    external: true
+

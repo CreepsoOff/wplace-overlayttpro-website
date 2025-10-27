@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: false,
   
+  // Required for Docker deployment
+  output: 'standalone',
+  
   // Performance optimizations
   swcMinify: true,
   

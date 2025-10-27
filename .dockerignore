@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+*.md
+.env*.local
+Dockerfile
+docker-compose.yml
+.dockerignore
+.gitignore
+README.md
+other_website
+overlay-pro-tt-latest-src(1).zip
+

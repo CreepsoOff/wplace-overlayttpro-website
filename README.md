@@ -1,79 +1,68 @@
-# Overlay Pro TT Website
+# Overlay Pro TT - Website
 
-A modern, animated website for the Wplace Overlay Pro TT userscript.
+Modern, responsive website for the Overlay Pro TT userscript.
 
-## Features
+## 🌐 Live Site
 
-- ✨ Smooth animations and transitions
-- 🎨 Modern gradient design with purple/blue theme
-- 📱 Fully responsive (mobile, tablet, desktop)
-- 🚀 Built with Next.js 14, React 18, TypeScript, and TailwindCSS
-- ⚡ Optimized performance
-- 🎯 Smooth scroll navigation
+**Production**: https://install.creepso.com
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ installed
-- npm or pnpm package manager
-
-### Installation
-
-1. Install dependencies:
+## 🚀 Quick Start (Development)
 
 ```bash
+# Install dependencies
 npm install
-```
 
-2. Run the development server:
-
-```bash
+# Run development server
 npm run dev
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Building for Production
+## 📦 Production Deployment
 
-```bash
-npm run build
-npm start
-```
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete deployment instructions to VPS with Docker + Traefik.
 
-## Project Structure
+### Quick Deploy Summary:
+
+1. **Transfer files via SFTP** to `/opt/overlay-pro-website`
+2. **SSH into VPS** and run:
+   ```bash
+   cd /opt/overlay-pro-website
+   docker compose up -d --build
+   ```
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 14
+- **UI**: React 18 + TypeScript
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **Deployment**: Docker + Traefik
+
+## 📁 Project Structure
 
 ```
 ├── app/
-│   ├── layout.tsx       # Root layout with metadata
-│   ├── page.tsx         # Main landing page
-│   └── globals.css      # Global styles and Tailwind
-├── public/              # Static assets
-├── tailwind.config.ts   # Tailwind configuration
-├── tsconfig.json        # TypeScript configuration
-└── package.json         # Dependencies and scripts
+│   ├── page.tsx          # Main landing page
+│   ├── layout.tsx        # Root layout
+│   └── globals.css       # Global styles
+├── Dockerfile            # Docker image configuration
+├── docker-compose.yml    # Docker compose for deployment
+├── deploy.sh            # Deployment script
+└── DEPLOYMENT.md        # Detailed deployment guide
 ```
 
-## Technologies Used
+## 🔗 Links
 
-- **Next.js 14** - React framework with App Router
-- **React 18** - UI library
-- **TypeScript** - Type-safe JavaScript
-- **TailwindCSS** - Utility-first CSS framework
-- **Lucide React** - Beautiful icon library
+- **GitHub**: [CreepsoOff/Wplace-Overlay-Pro](https://github.com/CreepsoOff/Wplace-Overlay-Pro)
+- **Script**: [Install Overlay Pro TT](http://cdn.jsdelivr.net/gh/creepsooff/Wplace-Overlay-Pro@development/dist/overlay-pro-tt.user.js)
+- **wplace.live**: [https://wplace.live](https://wplace.live)
 
-## Sections
+## 📄 License
 
-1. **Navigation** - Sticky header with smooth scroll links
-2. **Hero** - Animated hero section with gradient text
-3. **Features Grid** - 6 key features with icons
-4. **Detailed Features** - 3 in-depth features
-5. **FAQ** - Accordion-style frequently asked questions
-6. **Install** - Installation instructions and download button
-7. **Footer** - Links and license information
+GPL-3.0 License - See the [main repository](https://github.com/CreepsoOff/Wplace-Overlay-Pro) for details.
 
-## License
+---
 
-This website is for the Overlay Pro TT userscript, which is licensed under GPL-3.0.
-
-
+Made with 💜 for the wplace.live community
