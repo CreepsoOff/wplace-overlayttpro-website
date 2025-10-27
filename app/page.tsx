@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { 
   Layers, 
@@ -16,11 +16,19 @@ import {
   Move,
   Eye,
   Plus,
-  Minus
+  Minus,
+  Menu,
+  X
 } from 'lucide-react'
 
+// Animation variants for reuse
+const fadeInUp = {
+  initial: { opacity: 0, y: 50 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: "easeOut" }
+}
 
-const AnimatedSection = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => {
+const AnimatedSection = memo(({ children, className = '' }: { children: React.ReactNode; className?: string }) => {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
   
@@ -35,10 +43,129 @@ const AnimatedSection = ({ children, className = '' }: { children: React.ReactNo
       {children}
     </motion.div>
   )
-}
+})
+
+AnimatedSection.displayName = 'AnimatedSection'
 
 
-const FAQItem = ({ question, answer, index }: { question: string; answer: string; index: number }) => {
+const StepCard = memo(({ step, title, description, buttons, icon: Icon, index }: { step: string; title: string; description: string; buttons: Array<{ link: string; text: string; icon: any }>; icon: any; index: number }) => {
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const currentCard = cardRef.current
+    if (!currentCard) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            entry.target.classList.add('is-visible')
+          }, index * 100)
+          observer.unobserve(entry.target)
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(currentCard)
+    return () => observer.disconnect()
+  }, [index])
+
+  return (
+    <div
+      ref={cardRef}
+      className="feature-card backdrop-blur-sm rounded-2xl border border-slate-800 p-8 flex flex-col overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(236, 72, 153, 0.1) 100%)',
+      }}
+    >
+      <div className="mb-4">
+        <span className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-blue-600/30 to-violet-600/30 border border-blue-400/50 text-sm font-medium text-white">
+          Step {step}
+        </span>
+      </div>
+      <h3 className="text-2xl font-bold mb-3 text-white">{title}</h3>
+      <p className="text-slate-300 leading-relaxed mb-6 flex-grow">{description}</p>
+      <div className="flex flex-col gap-3">
+        {buttons.map((button, idx) => {
+          const ButtonIcon = button.icon
+          return (
+            <motion.a
+              key={idx}
+              href={button.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 rounded-lg font-medium transition-all shadow-lg shadow-blue-500/20"
+            >
+              <ButtonIcon className="w-5 h-5" />
+              <span>{button.text}</span>
+              <motion.span
+                initial={{ x: 0 }}
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                →
+              </motion.span>
+            </motion.a>
+          )
+        })}
+      </div>
+    </div>
+  )
+})
+
+StepCard.displayName = 'StepCard'
+
+const FeatureCard = memo(({ icon: Icon, title, description, index }: { icon: any; title: string; description: string; index: number }) => {
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const currentCard = cardRef.current
+    if (!currentCard) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            entry.target.classList.add('is-visible')
+          }, index * 100)
+          observer.unobserve(entry.target)
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(currentCard)
+    return () => observer.disconnect()
+  }, [index])
+
+  return (
+    <div
+      ref={cardRef}
+      className="feature-card group relative p-8 backdrop-blur-sm rounded-2xl border border-slate-800 hover:border-primary-500/50 transition-all duration-300 overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(51, 65, 85, 0.4) 100%)',
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-500/0 via-violet-500/0 to-primary-500/0 group-hover:from-primary-500/10 group-hover:via-violet-500/5 group-hover:to-primary-500/10 rounded-2xl transition-all duration-300" />
+      <div className="relative flex items-start gap-4">
+                    <div className="flex-shrink-0 w-14 h-14 bg-primary-600 rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:bg-primary-500 transition-all duration-300">
+                      <Icon className="w-7 h-7 text-white" />
+                    </div>
+        <div>
+          <h3 className="text-xl font-bold mb-2">{title}</h3>
+          <p className="text-slate-400 leading-relaxed text-sm">{description}</p>
+        </div>
+      </div>
+    </div>
+  )
+})
+
+FeatureCard.displayName = 'FeatureCard'
+
+const FAQItem = memo(({ question, answer, index }: { question: string; answer: string; index: number }) => {
   const [isOpen, setIsOpen] = useState(false)
   
   return (
@@ -80,17 +207,12 @@ const FAQItem = ({ question, answer, index }: { question: string; answer: string
       </motion.div>
     </motion.div>
   )
-}
+})
 
-export default function Home() {
-  const handleScrollTo = (id: string) => {
-    const element = document.getElementById(id)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
+FAQItem.displayName = 'FAQItem'
 
-  const features = [
+// Static data extracted outside component for better performance
+const FEATURES_DATA = [
     {
       icon: Layers,
       title: 'Multiple Overlays',
@@ -121,9 +243,9 @@ export default function Home() {
       title: 'Universal Compatibility',
       description: 'Works seamlessly across all modern browsers',
     },
-  ]
+]
 
-  const detailedFeatures = [
+const DETAILED_FEATURES_DATA = [
     {
       icon: Eye,
       title: 'Smart Overlay System',
@@ -139,9 +261,9 @@ export default function Home() {
       title: 'Flexible Positioning',
       description: 'Drag, resize, and reposition overlays with intuitive controls and snap-to-grid functionality',
     },
-  ]
+]
 
-  const faqs = [
+const FAQS_DATA = [
     {
       question: 'What is Overlay Pro TT?',
       answer: 'Overlay Pro TT is a powerful userscript for wplace.live that allows you to overlay images on the canvas with pixel-perfect accuracy, smart color matching, and intuitive controls.',
@@ -166,7 +288,58 @@ export default function Home() {
       question: 'Is it free to use?',
       answer: 'Yes! Overlay Pro TT is completely free and open-source under the GPL-3.0 license.',
     },
-  ]
+]
+
+const STEPS_DATA = [
+  {
+    step: '1 of 3',
+    title: 'Install Userscript Manager',
+    description: "Add Violentmonkey or Tampermonkey extension to your browser. Choose your preferred manager below.",
+    buttons: [
+      { link: 'https://violentmonkey.github.io/get-it/', text: 'Get Violentmonkey', icon: Download },
+      { link: 'https://www.tampermonkey.net/', text: 'Get Tampermonkey', icon: Download }
+    ],
+    icon: Download
+  },
+  {
+    step: '2 of 3',
+    title: 'Install Script',
+    description: 'Click the button below to install Overlay Pro TT. Your userscript manager will handle the installation automatically.',
+    buttons: [
+      { link: 'http://cdn.jsdelivr.net/gh/creepsooff/Wplace-Overlay-Pro@development/dist/overlay-pro-tt.user.js', text: 'Install Overlay Pro TT', icon: Zap }
+    ],
+    icon: Zap
+  },
+  {
+    step: '3 of 3',
+    title: 'Go to wplace.live',
+    description: 'Navigate to wplace.live and Overlay Pro TT will activate automatically. All features are ready to use immediately.',
+    buttons: [
+      { link: 'https://wplace.live', text: 'Open wplace.live', icon: Globe }
+    ],
+    icon: Globe
+  }
+]
+
+export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const handleScrollTo = useCallback((id: string) => {
+    setMobileMenuOpen(false)
+    setTimeout(() => {
+      const element = document.getElementById(id)
+      if (element) {
+        const offset = 80
+        const elementPosition = element.getBoundingClientRect().top
+        const offsetPosition = elementPosition + window.pageYOffset - offset
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        })
+      }
+    }, 100)
+  }, [])
 
   return (
     <div className="min-h-screen">
@@ -184,11 +357,13 @@ export default function Home() {
               transition={{ delay: 0.2 }}
               className="flex items-center space-x-2"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
                 <Layers className="w-5 h-5 text-white" />
               </div>
               <span className="font-bold text-lg">Overlay Pro TT</span>
             </motion.div>
+
+            {/* Desktop Menu */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -215,7 +390,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => handleScrollTo('install')}
-                className="px-4 py-2 bg-primary-600 hover:bg-primary-500 rounded-lg transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 rounded-lg transition-all text-sm font-medium shadow-md shadow-blue-500/20"
               >
                 Install
               </button>
@@ -229,12 +404,71 @@ export default function Home() {
                 <Github className="w-5 h-5" />
               </a>
             </motion.div>
+
+            {/* Mobile Menu Button */}
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden text-slate-300 hover:text-white transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </motion.button>
           </div>
+
+          {/* Mobile Menu */}
+          <motion.div
+            initial={false}
+            animate={{
+              height: mobileMenuOpen ? 'auto' : 0,
+              opacity: mobileMenuOpen ? 1 : 0,
+            }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="md:hidden overflow-hidden"
+          >
+            <div className="py-4 space-y-3 border-t border-slate-800/50">
+              <button
+                onClick={() => handleScrollTo('home')}
+                className="block w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors text-sm font-medium"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => handleScrollTo('features')}
+                className="block w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors text-sm font-medium"
+              >
+                Features
+              </button>
+              <button
+                onClick={() => handleScrollTo('faq')}
+                className="block w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors text-sm font-medium"
+              >
+                FAQ
+              </button>
+              <button
+                onClick={() => handleScrollTo('install')}
+                className="block w-full text-left px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 rounded-lg transition-all text-sm font-medium shadow-md shadow-blue-500/20"
+              >
+                Install
+              </button>
+              <a
+                href="https://github.com/CreepsoOff/Wplace-Overlay-Pro"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors text-sm font-medium"
+              >
+                <Github className="w-5 h-5" />
+                <span>GitHub</span>
+              </a>
+            </div>
+          </motion.div>
         </div>
       </motion.nav>
 
       {/* Hero Section */}
-      <section id="home" className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <section id="home" className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
@@ -255,7 +489,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto text-center relative z-10">
+        <div className="max-w-7xl mx-auto text-center relative z-10 py-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -266,68 +500,57 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1 }}
-              className="flex items-center justify-center gap-3 mb-8"
+              className="flex items-center justify-center gap-3 mb-8 lg:mb-12"
             >
-              <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm rounded-full border border-slate-700/50">
-                <div className="relative flex h-2 w-2">
+              <div className="flex items-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-slate-800/50 backdrop-blur-sm rounded-full border border-slate-700/50">
+                <div className="relative flex h-2 w-2 lg:h-2.5 lg:w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 lg:h-2.5 lg:w-2.5 bg-green-500"></span>
                 </div>
-                <span className="text-sm text-slate-300">Wplace.live power tool</span>
+                <span className="text-sm lg:text-base font-medium text-slate-300">Professional Grade</span>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm rounded-full border border-slate-700/50">
-                <div className="relative flex h-2 w-2">
+              <div className="flex items-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-slate-800/50 backdrop-blur-sm rounded-full border border-slate-700/50">
+                <div className="relative flex h-2 w-2 lg:h-2.5 lg:w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 lg:h-2.5 lg:w-2.5 bg-green-500"></span>
                 </div>
-                <span className="text-sm text-slate-300">Open‑source</span>
+                <span className="text-sm lg:text-base font-medium text-slate-300">Open‑source</span>
               </div>
             </motion.div>
 
             <motion.h1
-              className="text-6xl sm:text-7xl lg:text-8xl font-bold mb-6"
+              className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-bold mb-6 lg:mb-8 leading-tight"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <motion.span
-                className="inline-block bg-gradient-to-r from-white via-primary-200 to-white bg-clip-text text-transparent"
-                animate={{
-                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-                style={{ backgroundSize: '200% auto' }}
-              >
+              <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                 Overlay Pro TT
-              </motion.span>
+              </span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-xl sm:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed"
+              className="text-lg sm:text-xl md:text-2xl lg:text-2xl text-slate-300 mb-12 lg:mb-14 max-w-4xl mx-auto leading-relaxed"
             >
-              Transform your <span className="text-primary-400 font-semibold">wplace.live</span> experience with the most advanced overlay system. 
-              Achieve pixel-perfect accuracy with intelligent color matching and intuitive controls.
+              Transform your <span className="text-violet-400 font-semibold">wplace.live</span> experience with the most advanced overlay system. 
+              Achieve <span className="text-white font-semibold">pixel-perfect accuracy</span> with intelligent color matching and intuitive controls.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 lg:mb-20"
             >
               <motion.button
                 onClick={() => handleScrollTo('install')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="group relative px-8 py-4 bg-primary-600 rounded-lg font-semibold text-lg hover:bg-primary-500 transition-all shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40"
+                className="group relative px-8 py-4 lg:px-10 lg:py-5 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 rounded-lg lg:rounded-xl font-semibold text-base lg:text-xl transition-all shadow-lg shadow-blue-500/30 hover:shadow-violet-500/40"
               >
                 <span className="flex items-center space-x-2">
-                  <Download className="w-5 h-5" />
+                  <Download className="w-5 h-5 lg:w-6 lg:h-6" />
                   <span>Install Now</span>
                 </span>
               </motion.button>
@@ -337,10 +560,10 @@ export default function Home() {
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-slate-800 hover:bg-slate-700 rounded-lg font-semibold text-lg transition-all border border-slate-700"
+                className="px-8 py-4 lg:px-10 lg:py-5 bg-slate-800 hover:bg-slate-700 rounded-lg lg:rounded-xl font-semibold text-base lg:text-xl transition-all border border-slate-700"
               >
                 <span className="flex items-center space-x-2">
-                  <Github className="w-5 h-5" />
+                  <Github className="w-5 h-5 lg:w-6 lg:h-6" />
                   <span>View on GitHub</span>
                 </span>
               </motion.a>
@@ -366,7 +589,7 @@ export default function Home() {
       <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
               Powerful features for wplace.live
             </h2>
             <p className="text-xl text-slate-400">
@@ -374,27 +597,17 @@ export default function Home() {
             </p>
           </AnimatedSection>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => {
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES_DATA.map((feature, index) => {
               const Icon = feature.icon
               return (
-                <motion.div
+                <FeatureCard
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
-                  className="group relative p-8 bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800 hover:border-primary-500/50 transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-500/0 to-primary-500/0 group-hover:from-primary-500/5 group-hover:to-primary-500/10 rounded-2xl transition-all duration-300" />
-                  <div className="relative">
-                    <div className="w-14 h-14 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="w-7 h-7 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                    <p className="text-slate-400 leading-relaxed">{feature.description}</p>
-                  </div>
-                </motion.div>
+                  icon={Icon}
+                  title={feature.title}
+                  description={feature.description}
+                  index={index}
+                />
               )
             })}
           </div>
@@ -405,7 +618,7 @@ export default function Home() {
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-900/30">
         <div className="max-w-7xl mx-auto">
           <div className="space-y-24">
-            {detailedFeatures.map((feature, index) => {
+            {DETAILED_FEATURES_DATA.map((feature, index) => {
               const Icon = feature.icon
               const isEven = index % 2 === 0
               return (
@@ -416,7 +629,7 @@ export default function Home() {
                   } items-center gap-12 lg:gap-16`}
                 >
                   <div className="flex-1">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl mb-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-6">
                       <Icon className="w-8 h-8 text-white" />
                     </div>
                     <h3 className="text-3xl lg:text-4xl font-bold mb-4">{feature.title}</h3>
@@ -427,7 +640,10 @@ export default function Home() {
                   <div className="flex-1 w-full">
                     <motion.div
                       whileHover={{ scale: 1.02 }}
-                      className="aspect-video bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 flex items-center justify-center overflow-hidden relative"
+                      className="aspect-video rounded-2xl border border-slate-700 flex items-center justify-center overflow-hidden relative"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 50%, rgba(51, 65, 85, 0.5) 100%)',
+                      }}
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-primary-700/10" />
                       <Icon className="w-24 h-24 text-primary-500/20 relative z-10" />
@@ -444,14 +660,14 @@ export default function Home() {
       <section id="faq" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           <AnimatedSection className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent">
               Frequently Asked Questions
             </h2>
             <p className="text-xl text-slate-400">Everything you need to know</p>
           </AnimatedSection>
           
           <div className="bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800 p-8">
-            {faqs.map((faq, index) => (
+            {FAQS_DATA.map((faq, index) => (
               <FAQItem
                 key={index}
                 question={faq.question}
@@ -463,83 +679,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Install Section */}
-      <section id="install" className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-900/30">
-        <AnimatedSection className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-slate-300 mb-12">
-            Install Overlay Pro TT in seconds and start creating pixel-perfect overlays on wplace.live
-          </p>
-          
-          <div className="bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800 p-8 mb-8">
-            <div className="grid md:grid-cols-2 gap-8 text-left">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center font-bold text-lg">
-                  1
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg mb-2">Install a Userscript Manager</h3>
-                  <p className="text-slate-400">
-                    Get{' '}
-                    <a
-                      href="https://violentmonkey.github.io/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary-400 hover:text-primary-300 underline"
-                    >
-                      Violentmonkey
-                    </a>{' '}
-                    or{' '}
-                    <a
-                      href="https://www.tampermonkey.net/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary-400 hover:text-primary-300 underline"
-                    >
-                      Tampermonkey
-                    </a>
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center font-bold text-lg">
-                  2
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg mb-2">Click the Install Button</h3>
-                  <p className="text-slate-400">
-                    The userscript will be automatically imported into your manager
-                  </p>
-                </div>
-              </div>
-            </div>
+      {/* How it Works Section */}
+      <section id="install" className="py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <AnimatedSection className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-fuchsia-400 via-violet-400 to-blue-400 bg-clip-text text-transparent">
+              How it works in three steps
+            </h2>
+            <p className="text-xl text-slate-400">
+              From manual placement to perfect precision — here's how Overlay Pro TT works.
+            </p>
+          </AnimatedSection>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {STEPS_DATA.map((item, index) => (
+              <StepCard
+                key={index}
+                step={item.step}
+                title={item.title}
+                description={item.description}
+                buttons={item.buttons}
+                icon={item.icon}
+                index={index}
+              />
+            ))}
           </div>
-          
-          <motion.a
-            href="http://cdn.jsdelivr.net/gh/creepsooff/Wplace-Overlay-Pro@development/dist/overlay-pro-tt.user.js"
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center space-x-3 px-12 py-5 bg-primary-600 rounded-xl font-bold text-xl hover:bg-primary-500 transition-all shadow-2xl shadow-primary-500/20 hover:shadow-primary-500/40"
-          >
-            <Download className="w-6 h-6" />
-            <span>Install Overlay Pro TT</span>
-          </motion.a>
-          <p className="text-sm text-slate-500 mt-6">
-            Free and open-source • GPL-3.0 License
-          </p>
-        </AnimatedSection>
+        </div>
       </section>
+
 
       {/* Footer */}
       <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
                 <Layers className="w-5 h-5 text-white" />
               </div>
               <span className="font-bold text-lg">Overlay Pro TT</span>
