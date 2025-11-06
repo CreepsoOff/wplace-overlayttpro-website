@@ -35,3 +35,4 @@ next-env.d.ts
 # Other
 other_website/
 *.zip
+exported-content/
